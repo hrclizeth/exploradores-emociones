@@ -1,1 +1,263 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exploradores del Bosque Mágico</title>
+  <style>
+    :root {
+      --bg: #f0f9f4;
+      --card: #ffffff;
+      --primary: #2d8a56;
+      --accent: #f4a261;
+      --text: #1d3557;
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body {
+      margin: 0; padding: 15px; background: linear-gradient(180deg, #dff5e8 0%, #f9f7f0 100%);
+      color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    }
+    .game-box {
+      max-width: 520px; width: 100%; background: var(--card); border-radius: 24px;
+      padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); text-align: center;
+      margin-top: 10px; position: relative;
+    }
+    .mascot { font-size: 68px; margin: 5px 0; animation: bounce 2.5s infinite; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    h1 { font-size: 1.5rem; color: var(--primary); margin: 8px 0; }
+    p.story { font-size: 1.15rem; line-height: 1.5; background: #f4fbf7; padding: 14px; border-radius: 16px; border: 2px dashed #b7e4c7; }
+    .voice-btn {
+      background: #e9f5ee; border: 2px solid var(--primary); color: var(--primary);
+      padding: 8px 16px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .opt-btn {
+      background: #fff; border: 3px solid #e0e7ec; border-radius: 18px; padding: 14px 10px;
+      cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center;
+      font-size: 1rem; font-weight: 600; color: var(--text);
+    }
+    .opt-btn:hover, .opt-btn:active { border-color: var(--primary); background: #f0fdf4; transform: scale(1.02); }
+    .opt-emoji { font-size: 40px; margin-bottom: 6px; }
+    input.kid-name {
+      width: 85%; padding: 14px; font-size: 1.1rem; border-radius: 14px;
+      border: 2px solid #b7e4c7; text-align: center; margin: 12px 0;
+    }
+    .main-btn {
+      background: var(--primary); color: white; border: none; padding: 14px 28px;
+      font-size: 1.15rem; border-radius: 50px; cursor: pointer; font-weight: bold; width: 85%;
+      margin-top: 10px; box-shadow: 0 4px 10px rgba(45,138,86,0.3);
+    }
+    .breath-circle {
+      width: 120px; height: 120px; border-radius: 50%; background: #a8dadc;
+      margin: 20px auto; display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; animation: breathe 6s infinite ease-in-out;
+    }
+    @keyframes breathe { 0%, 100% { transform: scale(0.85); background: #a8dadc; } 50% { transform: scale(1.25); background: #74c69d; } }
+    .teacher-trigger {
+      margin-top: 25px; font-size: 0.8rem; color: #8d99ae; background: none; border: none;
+      text-decoration: underline; cursor: pointer;
+    }
+    .teacher-panel {
+      display: none; text-align: left; background: #fff8f0; border: 2px solid #f4a261;
+      padding: 16px; border-radius: 16px; margin-top: 15px; font-size: 0.92rem;
+    }
+    .alert-high { color: #d62828; font-weight: bold; }
+    .alert-ok { color: #2b9348; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="game-box" id="app">
+  <!-- Pantalla Inicial -->
+  <div id="screen-start">
+    <div class="mascot">🦉</div>
+    <h1>El Guardián del Bosque Mágico</h1>
+    <p class="story">¡Hola explorador! Soy el Búho Lumi. Necesito tu ayuda para cuidar las emociones de los animalitos del bosque.</p>
+    <input type="text" id="kidName" class="kid-name" placeholder="Escribe tu nombre o apodo">
+    <br>
+    <button class="main-btn" onclick="startGame()">¡Comenzar Aventura! 🌟</button>
+  </div>
+
+  <!-- Pantalla de Misiones -->
+  <div id="screen-question" style="display:none;">
+    <div class="mascot" id="q-mascot">🦊</div>
+    <h1 id="q-title">Misión 1</h1>
+    <button class="voice-btn" onclick="speakCurrent()">🔊 Escuchar cuento</button>
+    <p class="story" id="q-story"></p>
+    <div class="options-grid" id="q-options"></div>
+  </div>
+
+  <!-- Pantalla Final Niño -->
+  <div id="screen-end" style="display:none;">
+    <div class="mascot">🏅</div>
+    <h1>¡Medalla de Guardián Valiente!</h1>
+    <p class="story" id="end-msg">¡Gracias por ayudar a los animalitos! Ahora hagamos el Escudo de la Flor Mágica: inhala cuando el círculo crezca y sopla suave cuando se haga pequeño.</p>
+    <div class="breath-circle">🌸</div>
+    <button class="main-btn" onclick="location.reload()">Jugar con otro explorador 🔄</button>
+    <br>
+    <button class="teacher-trigger" onclick="toggleTeacher()">🔒 Acceso Docente (Ver Hallazgos)</button>
+
+    <div class="teacher-panel" id="teacher-panel">
+      <h3>📋 Reporte Pedagógico Proyectivo</h3>
+      <div id="report-content"></div>
+      <button class="main-btn" style="margin-top:12px; width:100%; font-size:0.95rem;" onclick="downloadReport()">📥 Descargar Reporte (.txt)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let studentName = "";
+  let currentStep = 0;
+  let findings = [];
+
+  const missions = [
+    {
+      mascot: "🦊",
+      title: "1. El Clima del Corazón",
+      story: "El zorrito Tito acaba de despertar. Si el corazón de Tito fuera el clima de hoy, ¿cómo se siente por dentro?",
+      dimension: "Estado Emocional Base",
+      options: [
+        { emoji: "☀️", label: "Soleado y feliz", level: "Estable", note: "Percibe seguridad y bienestar emocional en su jornada." },
+        { emoji: "🌧️", label: "Lluvioso y triste", level: "Alerta Media", note: "Manifiesta tristeza o desánimo; requiere escucha afectiva." },
+        { emoji: "⛈️", label: "Con rayos y enojo", level: "Alerta Alta", note: "Proyecta tensión, frustración o enojo contenido." },
+        { emoji: "🌫️", label: "Con niebla y miedo", level: "Alerta Alta", note: "Posible ansiedad, temor o sensación de confusión." }
+      ]
+    },
+    {
+      mascot: "🐰",
+      title: "2. Los Ruidos del Bosque",
+      story: "La conejita Lila se esconde detrás de un árbol porque algo la asustó mucho. ¿De qué se está escondiendo Lila?",
+      dimension: "Focos de Miedo o Vulnerabilidad",
+      options: [
+        { emoji: "🗣️", label: "Gritos o peleas fuertes", level: "Alerta Alta", note: "Sensibilidad o exposición a gritos/conflictos en su entorno." },
+        { emoji: "🌑", label: "Quedarse sola a oscuras", level: "Alerta Media", note: "Temor al abandono, soledad o separación." },
+        { emoji: "🙈", label: "Que otros se burlen", level: "Alerta Media", note: "Inseguridad social o temor al rechazo entre pares." },
+        { emoji: "🦋", label: "Nada, solo juega", level: "Estable", note: "No proyecta temores agudos en este escenario." }
+      ]
+    },
+    {
+      mascot: "🐢",
+      title: "3. La Mochila de Piedritas",
+      story: "La tortuga Tita lleva una mochila que hoy le pesa en la espalda. ¿Qué piedrita pesada lleva adentro?",
+      dimension: "Carga Emocional / Problemas",
+      options: [
+        { emoji: "🏠", label: "Problemas en su casita", level: "Alerta Alta", note: "Preocupación asociada a dinámicas familiares o del hogar." },
+        { emoji: "🏫", label: "Tristeza en la escuela", level: "Alerta Media", note: "Dificultad en convivencia escolar o presión académica." },
+        { emoji: "🤐", label: "Un secreto que duele", level: "Alerta Crítica", note: "ATENCIÓN: Proyecta carga silenciosa o vivencia que teme contar. Brindar espacio seguro con orientación escolar." },
+        { emoji: "🎈", label: "Su mochila es liviana", level: "Estable", note: "No reporta cargas emocionales pesadas en este momento." }
+      ]
+    },
+    {
+      mascot: "🐻",
+      title: "4. El Árbol del Refugio",
+      story: "Cuando al osito Bambi le duele el corazón o tiene miedo, ¿a quién busca para sentirse seguro y abrazado?",
+      dimension: "Red de Apoyo Percibida",
+      options: [
+        { emoji: "👩‍👧", label: "A su familia en casa", level: "Estable", note: "Reconoce a su familia como refugio seguro." },
+        { emoji: "👩‍🏫", label: "A su profe en el cole", level: "Estable", note: "Vínculo de confianza positivo con la figura docente." },
+        { emoji: "🧸", label: "A sus amigos o juguetes", level: "Alerta Media", note: "Se apoya en pares o juego; fortalecer confianza con adultos." },
+        { emoji: "🕳️", label: "Se esconde solito", level: "Alerta Alta", note: "Sentimiento de aislamiento; percibe que debe afrontar sus miedos sin ayuda adulta." }
+      ]
+    }
+  ];
+
+  function speakText(text) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'es-CO';
+      utter.rate = 0.95;
+      window.speechSynthesis.speak(utter);
+    }
+  }
+
+  function startGame() {
+    const input = document.getElementById('kidName').value.trim();
+    studentName = input ? input : "Explorador Anónimo";
+    document.getElementById('screen-start').style.display = 'none';
+    document.getElementById('screen-question').style.display = 'block';
+    loadMission();
+  }
+
+  function loadMission() {
+    const m = missions[currentStep];
+    document.getElementById('q-mascot').textContent = m.mascot;
+    document.getElementById('q-title').textContent = m.title;
+    document.getElementById('q-story').textContent = m.story;
+    
+    const grid = document.getElementById('q-options');
+    grid.innerHTML = '';
+    m.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerHTML = `<span class="opt-emoji">${opt.emoji}</span><span>${opt.label}</span>`;
+      btn.onclick = () => selectOption(m, opt);
+      grid.appendChild(btn);
+    });
+    speakText(m.story);
+  }
+
+  function speakCurrent() {
+    speakText(missions[currentStep].story);
+  }
+
+  function selectOption(mission, opt) {
+    findings.push({
+      dimension: mission.dimension,
+      choice: `${opt.emoji} ${opt.label}`,
+      level: opt.level,
+      note: opt.note
+    });
+    currentStep++;
+    if (currentStep < missions.length) {
+      loadMission();
+    } else {
+      finishGame();
+    }
+  }
+
+  function finishGame() {
+    document.getElementById('screen-question').style.display = 'none';
+    document.getElementById('screen-end').style.display = 'block';
+    const msg = `¡Muy bien ${studentName}! Ganaste la medalla de Guardián Valiente. Respira conmigo mirando la flor.`;
+    document.getElementById('end-msg').textContent = msg;
+    speakText(msg);
+    buildReport();
+  }
+
+  function buildReport() {
+    const container = document.getElementById('report-content');
+    let html = `<p><strong>Estudiante:</strong> ${studentName}<br><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CO')}</p><hr>`;
+    findings.forEach(f => {
+      const cls = (f.level.includes('Alta') || f.level.includes('Crítica')) ? 'alert-high' : 'alert-ok';
+      html += `<p><strong>${f.dimension}:</strong> ${f.choice}<br>
+               <span class="${cls}">[${f.level}]</span> ${f.note}</p>`;
+    });
+    container.innerHTML = html;
+  }
+
+  function toggleTeacher() {
+    const pin = prompt("Ingrese clave docente (Por defecto escribe: 1234):");
+    if (pin === "1234") {
+      document.getElementById('teacher-panel').style.display = 'block';
+    } else if (pin !== null) {
+      alert("Clave incorrecta");
+    }
+  }
+
+  function downloadReport() {
+    let text = `REPORTE PEDAGÓGICO EMOCIONAL (6-7 AÑOS)\nEstudiante: ${studentName}\nFecha: ${new Date().toLocaleString('es-CO')}\n----------------------------------------\n\n`;
+    findings.forEach(f => {
+      text += `* ${f.dimension}: ${f.choice}\n  Nivel: ${f.level}\n  Orientación: ${f.note}\n\n`;
+    });
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Reporte_${studentName.replace(/\s+/g, '_')}.txt`;
+    a.click();
+  }
+</script>
+</body>
+</html>
