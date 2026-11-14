@@ -1,1 +1,1 @@
-# exploradores-emociones.
+# exploradores-emociones
