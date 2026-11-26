@@ -444,4 +444,704 @@
         </div>
         <div class="theory-card">
           <h4>4. Estrategias Pedagógicas Integradas</h4>
-          <strong>Reconocimiento facial
+          <strong>Reconocimiento facial:</strong> Identificación de emociones básicas (caritas).<br>
+          <strong>4 misiones proyectivas:</strong> Clima, linterna, mochila y refugio.<br>
+          <strong>Expresión gráfica:</strong> Dibujo libre y autorreporte emocional.<br>
+          <strong>Regulación:</strong> Minijuego adaptativo + Flor Mágica de respiración.
+        </div>
+        <div class="theory-card">
+          <h4>5. Sociedad y Rol del Futuro Docente</h4>
+          La sociedad debe garantizar entornos protectores y desestigmatizar la salud mental desde la primera infancia. Como futuros docentes, <strong>no diagnosticamos</strong>, pero observamos señales de alerta, creamos aulas emocionalmente seguras y activamos redes con familias y psicoorientación.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ================= VARIABLES GLOBALES ================= */
+  let studentName = "";
+  let faceIdx = 0;
+  let faceResults = [];
+  let todayFace = "feliz";
+  let currentStep = 0;
+  let findings = [];
+  let assignedMinigame = "";
+  let mgScore = 0;
+  let mgGoal = 8;
+
+  const EMO = {
+    feliz: { name: 'Feliz', tag: 'estable' },
+    triste: { name: 'Triste', tag: 'tristeza' },
+    enojado: { name: 'Enojado', tag: 'enojo' },
+    asustado: { name: 'Asustado', tag: 'miedo' },
+    tranquilo: { name: 'Tranquilo', tag: 'estable' }
+  };
+  const ALL_EMOS = ['feliz', 'triste', 'enojado', 'asustado', 'tranquilo'];
+  const FACE_ORDER = ['feliz', 'enojado', 'tranquilo', 'triste', 'asustado'];
+
+  const INK = ['#1B2B3A', '#E0483A', '#F5A524', '#2E9E5B', '#2F7FD6', '#8A4FD0'];
+  let strokes = [];
+  let drawColor = INK[0];
+  let canvasRedraw = null;
+
+  /* ================= UTILIDADES (VOZ, SONIDO, SVG) ================= */
+  function speakText(text) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'es-CO';
+      utter.rate = 0.94;
+      window.speechSynthesis.speak(utter);
+    }
+  }
+
+  function playTone(freq = 520, duration = 0.12) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function faceSVG(k) {
+    const c = `var(--f-${k})`;
+    const ink = 'var(--ink)';
+    const dot = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" style="fill:${ink}"/>`;
+    const line = (d, w = 4) => `<path d="${d}" style="fill:none;stroke:${ink};stroke-width:${w};stroke-linecap:round"/>`;
+    let inner = '';
+    if (k === 'feliz') {
+      inner = dot(36, 42, 4.5) + dot(64, 42, 4.5) + line('M30 62 Q50 84 70 62');
+    } else if (k === 'triste') {
+      inner = dot(36, 46, 4.5) + dot(64, 46, 4.5) + line('M27 34 L44 28', 3.5) + line('M73 34 L56 28', 3.5) +
+        line('M32 74 Q50 58 68 74') + `<path d="M30 54 Q26 62 30 66 Q34 62 30 54 Z" style="fill:var(--tear);stroke:${ink};stroke-width:1.5"/>`;
+    } else if (k === 'enojado') {
+      inner = dot(38, 48, 4.5) + dot(62, 48, 4.5) + line('M25 30 L45 40', 4.5) + line('M75 30 L55 40', 4.5) + line('M34 73 Q50 62 66 73');
+    } else if (k === 'asustado') {
+      inner = `<circle cx="36" cy="44" r="9" style="fill:#fff;stroke:${ink};stroke-width:2.5"/><circle cx="64" cy="44" r="9" style="fill:#fff;stroke:${ink};stroke-width:2.5"/>` +
+        dot(36, 45, 3.5) + dot(64, 45, 3.5) + line('M27 27 Q36 20 45 27', 3.5) + line('M55 27 Q64 20 73 27', 3.5) +
+        `<ellipse cx="50" cy="70" rx="7" ry="9" style="fill:${ink}"/>`;
+    } else {
+      inner = line('M28 46 Q36 53 44 46') + line('M56 46 Q64 53 72 46') + line('M40 66 Q50 73 60 66');
+    }
+    return `<svg viewBox="0 0 100 100" role="img" aria-label="Carita ${EMO[k].name.toLowerCase()}"><circle cx="50" cy="50" r="46" style="fill:${c};stroke:${ink};stroke-width:3"/>${inner}</svg>`;
+  }
+
+  /* LUCIÉRNAGA SVG REAL (con alas y abdomen brillante) */
+  function fireflySVG() {
+    return `<svg viewBox="0 0 80 80" width="60" height="60" aria-label="Luciérnaga">
+      <ellipse cx="26" cy="30" rx="14" ry="8" transform="rotate(-25 26 30)" fill="rgba(224,247,250,0.85)" stroke="#90e0ef" stroke-width="2"/>
+      <ellipse cx="54" cy="30" rx="14" ry="8" transform="rotate(25 54 30)" fill="rgba(224,247,250,0.85)" stroke="#90e0ef" stroke-width="2"/>
+      <circle cx="40" cy="54" r="14" fill="#ffe066" opacity="0.45"/>
+      <ellipse cx="40" cy="52" rx="9" ry="11" fill="#ffd43b" stroke="#f59f00" stroke-width="2"/>
+      <circle cx="40" cy="32" r="9" fill="#2b2d42"/>
+      <circle cx="37" cy="30" r="2" fill="#fff"/>
+      <circle cx="43" cy="30" r="2" fill="#fff"/>
+      <path d="M35 24 Q30 15 26 17" fill="none" stroke="#ffd43b" stroke-width="2" stroke-linecap="round"/>
+      <path d="M45 24 Q50 15 54 17" fill="none" stroke="#ffd43b" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  function launchConfetti() {
+    const icons = ["🌟", "🎉", "🌸", "🦋", "💚", "✨"];
+    for (let i = 0; i < 24; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.textContent = icons[Math.floor(Math.random() * icons.length)];
+      c.style.left = Math.random() * 96 + 'vw';
+      c.style.animationDuration = (2.2 + Math.random() * 1.8) + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }
+  }
+
+  // Mostrar caritas en portada
+  document.getElementById('intro-faces').innerHTML = ALL_EMOS.map(faceSVG).join('');
+
+  /* ================= INICIO ================= */
+  function startAdventure() {
+    playTone(587, 0.15);
+    const input = document.getElementById('kidName').value.trim();
+    studentName = input ? input : "Explorador Anónimo";
+    document.getElementById('screen-start').style.display = 'none';
+    document.getElementById('screen-faces').style.display = 'block';
+    faceIdx = 0;
+    faceResults = [];
+    loadFaceStep();
+  }
+
+  /* ================= FASE 1: MIS CARITAS ================= */
+  function loadFaceStep() {
+    const k = FACE_ORDER[faceIdx];
+    document.getElementById('faces-progress').textContent = `Fase 1 de 4 · Mis Caritas (${faceIdx + 1} de ${FACE_ORDER.length})`;
+    document.getElementById('big-face-box').innerHTML = faceSVG(k);
+    document.getElementById('face-feedback').innerHTML = '';
+
+    const others = shuffle(ALL_EMOS.filter(x => x !== k)).slice(0, 2);
+    const opts = shuffle([k, ...others]);
+
+    const box = document.getElementById('face-name-opts');
+    box.innerHTML = '';
+    opts.forEach(o => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-face-name';
+      btn.textContent = EMO[o].name;
+      btn.onclick = () => pickFaceName(k, o, btn);
+      box.appendChild(btn);
+    });
+    speakText('¿Cómo se llama esta carita?');
+  }
+
+  function pickFaceName(correctKey, chosenKey, clickedBtn) {
+    playTone(correctKey === chosenKey ? 680 : 460, 0.14);
+    faceResults.push({ k: correctKey, chosen: chosenKey });
+
+    const allBtns = document.querySelectorAll('#face-name-opts .opt-face-name');
+    allBtns.forEach(b => {
+      b.classList.add('locked');
+      if (b.textContent === EMO[correctKey].name) b.classList.add('right');
+    });
+    if (correctKey !== chosenKey) clickedBtn.classList.add('picked');
+
+    const nextText = (faceIdx === FACE_ORDER.length - 1) ? '¡Ir al Bosque Mágico! 🌲' : 'Siguiente carita ➡️';
+    document.getElementById('face-feedback').innerHTML = `
+      <p style="font-weight:800; color:var(--primary); margin:4px 0;">Esta carita se llama <b>${EMO[correctKey].name}</b>.</p>
+      <button class="main-btn" onclick="nextFaceStep()">${nextText}</button>
+    `;
+    speakText(`Esta carita se llama ${EMO[correctKey].name}`);
+  }
+
+  function nextFaceStep() {
+    faceIdx++;
+    if (faceIdx < FACE_ORDER.length) {
+      loadFaceStep();
+    } else {
+      document.getElementById('screen-faces').style.display = 'none';
+      document.getElementById('screen-question').style.display = 'block';
+      currentStep = 0;
+      loadMission();
+    }
+  }
+
+  /* ================= FASE 2: BOSQUE MÁGICO ================= */
+  const missions = [
+    {
+      type: "sky",
+      mascot: "🦊",
+      title: "1. Atrapa el Clima del Corazón",
+      story: "El zorrito Tito acaba de despertar. ¡Atrapa en el cielo la nube o el sol que se parece al corazón de Tito hoy!",
+      dimension: "Estado Emocional Base",
+      options: [
+        { emoji: "☀️", label: "Soleado y feliz", tag: "estable", level: "Estable", note: "Percibe seguridad y bienestar emocional en su jornada." },
+        { emoji: "🌧️", label: "Lluvioso y triste", tag: "tristeza", level: "Alerta Media", note: "Manifiesta tristeza o desánimo; requiere escucha afectiva." },
+        { emoji: "⛈️", label: "Con rayos y enojo", tag: "enojo", level: "Alerta Alta", note: "Proyecta tensión, frustración o enojo contenido." },
+        { emoji: "🌫️", label: "Con niebla y miedo", tag: "miedo", level: "Alerta Alta", note: "Posible ansiedad, temor o sensación de confusión." }
+      ]
+    },
+    {
+      type: "forest",
+      mascot: "🐰",
+      title: "2. La Linterna en el Bosque",
+      story: "La conejita Lila escucha ruidos detrás de los arbustos. Toca los arbustos para descubrir qué hay, y toca de nuevo el que asusta a Lila.",
+      dimension: "Focos de Miedo o Vulnerabilidad",
+      options: [
+        { emoji: "🗣️", label: "Gritos o peleas", tag: "miedo", level: "Alerta Alta", note: "Sensibilidad o exposición a gritos/conflictos en su entorno." },
+        { emoji: "🌑", label: "Quedarse sola", tag: "miedo", level: "Alerta Media", note: "Temor al abandono, soledad o separación." },
+        { emoji: "🙈", label: "Que se burlen", tag: "tristeza", level: "Alerta Media", note: "Inseguridad social o temor al rechazo entre pares." },
+        { emoji: "🦋", label: "Solo mariposas", tag: "estable", level: "Estable", note: "No proyecta temores agudos en este escenario." }
+      ]
+    },
+    {
+      type: "backpack",
+      mascot: "🐢",
+      title: "3. Aligera la Mochila de Tita",
+      story: "La tortuga Tita lleva una mochila pesada. Toca la piedrita que más le pesa para convertirla en un globo y hacerla volar.",
+      dimension: "Carga Emocional / Problemas",
+      options: [
+        { emoji: "🏠", label: "Problemas en casa", tag: "tristeza", level: "Alerta Alta", note: "Preocupación asociada a dinámicas familiares o del hogar." },
+        { emoji: "🏫", label: "Tristeza en el cole", tag: "tristeza", level: "Alerta Media", note: "Dificultad en convivencia escolar o presión académica." },
+        { emoji: "🤐", label: "Secreto que duele", tag: "miedo", level: "Alerta Crítica", note: "ATENCIÓN: Proyecta carga silenciosa o vivencia que teme contar. Brindar espacio seguro con orientación escolar." },
+        { emoji: "🎈", label: "Está liviana", tag: "estable", level: "Estable", note: "No reporta cargas emocionales pesadas en este momento." }
+      ]
+    },
+    {
+      type: "path",
+      mascot: "🐻",
+      title: "4. El Camino al Refugio",
+      story: "Cuando al osito Bambi le duele el corazón, ¿hacia dónde camina para sentirse seguro? Toca el refugio para guiar a Bambi.",
+      dimension: "Red de Apoyo Percibida",
+      options: [
+        { emoji: "👩‍👧", label: "A su familia", tag: "estable", level: "Estable", note: "Reconoce a su familia como refugio seguro." },
+        { emoji: "👩‍🏫", label: "A su profe", tag: "estable", level: "Estable", note: "Vínculo de confianza positivo con la figura docente." },
+        { emoji: "🧸", label: "Amigos o juguetes", tag: "tristeza", level: "Alerta Media", note: "Se apoya en pares o juego; fortalecer confianza con adultos." },
+        { emoji: "🕳️", label: "Se esconde solito", tag: "tristeza", level: "Alerta Alta", note: "Sentimiento de aislamiento; percibe que debe afrontar sus miedos sin ayuda adulta." }
+      ]
+    }
+  ];
+
+  function updateProgress() {
+    document.querySelectorAll('.star-slot').forEach((s, idx) => {
+      if (idx < currentStep) s.classList.add('active');
+    });
+  }
+
+  function loadMission() {
+    updateProgress();
+    const m = missions[currentStep];
+    document.getElementById('q-mascot').textContent = m.mascot;
+    document.getElementById('q-title').textContent = m.title;
+    document.getElementById('q-story').textContent = m.story;
+    speakText(m.story);
+
+    const stage = document.getElementById('mission-stage');
+    stage.innerHTML = "";
+    if (m.type === "sky") renderSkyMission(stage, m);
+    else if (m.type === "forest") renderForestMission(stage, m);
+    else if (m.type === "backpack") renderBackpackMission(stage, m);
+    else if (m.type === "path") renderPathMission(stage, m);
+  }
+
+  function renderSkyMission(container, m) {
+    const box = document.createElement('div');
+    box.className = "stage stage-sky";
+    const coords = [
+      { left: "6%", top: "14px", delay: "0s" },
+      { left: "52%", top: "24px", delay: "0.7s" },
+      { left: "10%", top: "155px", delay: "1.2s" },
+      { left: "50%", top: "160px", delay: "0.4s" }
+    ];
+    m.options.forEach((opt, i) => {
+      const b = document.createElement('button');
+      b.className = "sky-bubble";
+      b.style.left = coords[i].left;
+      b.style.top = coords[i].top;
+      b.style.animationDelay = coords[i].delay;
+      b.innerHTML = `<span class="emo">${opt.emoji}</span><span>${opt.label}</span>`;
+      b.onclick = () => {
+        playTone(700, 0.15);
+        b.innerHTML = `<span class="emo">✨</span><span>¡Atrapado!</span>`;
+        setTimeout(() => selectOption(m, opt), 450);
+      };
+      box.appendChild(b);
+    });
+    container.appendChild(box);
+  }
+
+  function renderForestMission(container, m) {
+    const box = document.createElement('div');
+    box.className = "stage stage-forest";
+    box.innerHTML = `<p class="bush-hint">🔦 1. Toca un arbusto para iluminarlo. 2. Tócalo otra vez para elegirlo.</p>`;
+    const grid = document.createElement('div');
+    grid.className = "bush-grid";
+    m.options.forEach(opt => {
+      const card = document.createElement('button');
+      card.className = "bush-card";
+      card.dataset.revealed = "false";
+      card.innerHTML = `<span class="emo">🌿</span><span>¿Qué hay aquí?</span>`;
+      card.onclick = () => {
+        if (card.dataset.revealed === "false") {
+          playTone(480, 0.1);
+          card.dataset.revealed = "true";
+          card.classList.add("revealed");
+          card.innerHTML = `<span class="emo">${opt.emoji}</span><span>${opt.label}</span><small style="color:#2d936c;">Toca para elegir</small>`;
+        } else {
+          playTone(720, 0.15);
+          card.innerHTML = `<span class="emo">✨</span><span>¡Iluminado!</span>`;
+          setTimeout(() => selectOption(m, opt), 450);
+        }
+      };
+      grid.appendChild(card);
+    });
+    box.appendChild(grid);
+    container.appendChild(box);
+  }
+
+  function renderBackpackMission(container, m) {
+    const box = document.createElement('div');
+    box.className = "stage stage-backpack";
+    box.innerHTML = `<div class="backpack-center" id="bp-icon">🎒</div>`;
+    const grid = document.createElement('div');
+    grid.className = "stone-grid";
+    m.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = "stone-btn";
+      btn.innerHTML = `<span style="font-size:34px;">${opt.emoji}</span><span>${opt.label}</span>`;
+      btn.onclick = () => {
+        playTone(620, 0.15);
+        btn.innerHTML = `<span style="font-size:36px;">🎈</span><span>¡Más liviana!</span>`;
+        btn.classList.add("fly-away");
+        document.getElementById('bp-icon').textContent = "✨🎒✨";
+        setTimeout(() => selectOption(m, opt), 550);
+      };
+      grid.appendChild(btn);
+    });
+    box.appendChild(grid);
+    container.appendChild(box);
+  }
+
+  function renderPathMission(container, m) {
+    const box = document.createElement('div');
+    box.className = "stage stage-path";
+    box.innerHTML = `<div class="bear-walker" id="bear-walker">🐻 🐾🐾</div>`;
+    const grid = document.createElement('div');
+    grid.className = "refuge-grid";
+    m.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = "refuge-btn";
+      btn.innerHTML = `<span style="font-size:36px;">${opt.emoji}</span><span>${opt.label}</span>`;
+      btn.onclick = () => {
+        playTone(680, 0.15);
+        btn.classList.add("chosen");
+        document.getElementById('bear-walker').textContent = `🐻 ➡️ ${opt.emoji} 💚`;
+        setTimeout(() => selectOption(m, opt), 600);
+      };
+      grid.appendChild(btn);
+    });
+    box.appendChild(grid);
+    container.appendChild(box);
+  }
+
+  function speakCurrent() { speakText(missions[currentStep].story); }
+
+  function selectOption(mission, opt) {
+    findings.push({
+      dimension: mission.dimension,
+      choice: `${opt.emoji} ${opt.label}`,
+      tag: opt.tag,
+      level: opt.level,
+      note: opt.note
+    });
+    currentStep++;
+    if (currentStep < missions.length) {
+      loadMission();
+    } else {
+      startDrawPhase();
+    }
+  }
+
+  /* ================= FASE 3: DIBUJO + CARITA DE HOY ================= */
+  function startDrawPhase() {
+    document.getElementById('screen-question').style.display = 'none';
+    document.getElementById('screen-draw').style.display = 'block';
+    speakText('Ahora dibuja tu día favorito con los colores que más te gusten.');
+
+    const pal = document.getElementById('draw-palette');
+    pal.innerHTML = '';
+    INK.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'sw';
+      b.style.background = c;
+      b.setAttribute('aria-pressed', String(c === drawColor));
+      b.onclick = () => {
+        drawColor = c;
+        pal.querySelectorAll('.sw').forEach(s => s.setAttribute('aria-pressed', String(s === b)));
+      };
+      pal.appendChild(b);
+    });
+    initCanvas();
+  }
+
+  function initCanvas() {
+    const cv = document.getElementById('lienzo');
+    if (!cv || !cv.getContext) return;
+    const ctx = cv.getContext('2d');
+    function redraw() {
+      const d = window.devicePixelRatio || 1;
+      ctx.setTransform(d, 0, 0, d, 0, 0);
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      strokes.forEach(s => {
+        ctx.strokeStyle = s.c; ctx.lineWidth = s.w;
+        ctx.beginPath();
+        s.p.forEach((pt, j) => j ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]));
+        if (s.p.length === 1) ctx.lineTo(s.p[0][0] + 0.1, s.p[0][1]);
+        ctx.stroke();
+      });
+    }
+    function fit() {
+      const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+      cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d);
+      redraw();
+    }
+    canvasRedraw = redraw;
+    let cur = null;
+    const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    cv.onpointerdown = e => {
+      try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+      cur = { c: drawColor, w: 7, p: [pos(e)] };
+      strokes.push(cur); redraw();
+    };
+    cv.onpointermove = e => { if (!cur) return; cur.p.push(pos(e)); redraw(); };
+    cv.onpointerup = () => { cur = null; };
+    cv.onpointercancel = () => { cur = null; };
+    fit();
+  }
+
+  function undoStroke() { strokes.pop(); if (canvasRedraw) canvasRedraw(); }
+  function clearCanvas() { strokes = []; if (canvasRedraw) canvasRedraw(); }
+
+  function goToTodayFace() {
+    playTone(620, 0.14);
+    document.getElementById('screen-draw').style.display = 'none';
+    document.getElementById('screen-today').style.display = 'block';
+    speakText('¿Qué carita eres hoy?');
+
+    const grid = document.getElementById('today-faces-grid');
+    grid.innerHTML = '';
+    ALL_EMOS.forEach(k => {
+      const b = document.createElement('button');
+      b.className = 'face-btn';
+      b.innerHTML = `${faceSVG(k)}<span>${EMO[k].name}</span>`;
+      b.onclick = () => {
+        playTone(700, 0.14);
+        todayFace = k;
+        startAdaptiveMinigame();
+      };
+      grid.appendChild(b);
+    });
+  }
+
+  /* ================= FASE 4: MINIJUEGO ADAPTATIVO ================= */
+  function startAdaptiveMinigame() {
+    document.getElementById('screen-today').style.display = 'none';
+    document.getElementById('screen-minigame').style.display = 'block';
+
+    const tags = findings.map(f => f.tag);
+    tags.push(EMO[todayFace].tag);
+
+    if (tags.includes("enojo")) launchSparksGame();
+    else if (tags.includes("miedo")) launchFirefliesGame();
+    else if (tags.includes("tristeza")) launchCareGame();
+    else launchStarsGame();
+  }
+
+  /* LUCIÉRNAGAS REALES EN SVG */
+  function launchFirefliesGame() {
+    assignedMinigame = "Atrapa las Luciérnagas (Regulación de miedo y seguridad)";
+    mgScore = 0; mgGoal = 8;
+    document.getElementById('mg-title').textContent = "🪲 Atrapa las Luciérnagas";
+    const desc = "¡El bosque está oscuro! Toca 8 luciérnagas luminosas para llenar el bosque de luz y seguridad.";
+    document.getElementById('mg-desc').textContent = desc;
+    speakText(desc);
+
+    const arena = document.getElementById('mg-arena');
+    arena.className = "minigame-arena arena-dark";
+    arena.innerHTML = "";
+    document.getElementById('mg-score').textContent = `Luciérnagas: 0 / ${mgGoal}`;
+    spawnFirefly(arena);
+  }
+
+  function spawnFirefly(arena) {
+    if (mgScore >= mgGoal) { setTimeout(finishGame, 500); return; }
+    const fly = document.createElement('div');
+    fly.className = 'firefly-target';
+    fly.innerHTML = fireflySVG();
+    fly.style.left = (8 + Math.random() * 74) + '%';
+    fly.style.top = (10 + Math.random() * 68) + '%';
+    fly.onclick = () => {
+      playTone(520 + mgScore * 45, 0.12);
+      fly.onclick = null;
+      fly.style.transform = 'scale(1.4)';
+      fly.style.opacity = '0.2';
+      mgScore++;
+      document.getElementById('mg-score').textContent = `Luciérnagas: ${mgScore} / ${mgGoal}`;
+      arena.style.background = `hsl(210, 45%, ${14 + mgScore * 8}%)`;
+      setTimeout(() => { fly.remove(); spawnFirefly(arena); }, 240);
+    };
+    arena.appendChild(fly);
+  }
+
+  function launchSparksGame() {
+    assignedMinigame = "Apaga las Chispas (Descarga motora y calma)";
+    mgScore = 0; mgGoal = 8;
+    document.getElementById('mg-title').textContent = "💧 Apaga las Chispas";
+    const desc = "¡Hay chispas de enojo! Tócalas para convertirlas en flores de calma.";
+    document.getElementById('mg-desc').textContent = desc;
+    speakText(desc);
+    const arena = document.getElementById('mg-arena');
+    arena.className = "minigame-arena arena-fire";
+    arena.innerHTML = "";
+    document.getElementById('mg-score').textContent = `Chispas calmadas: 0 / ${mgGoal}`;
+    spawnClickableItem(arena, "🔥", "🌸", "Chispas calmadas");
+  }
+
+  function launchCareGame() {
+    assignedMinigame = "Cuidemos al Zorrito (Autocuidado y red de apoyo)";
+    mgScore = 0; mgGoal = 5;
+    document.getElementById('mg-title').textContent = "💛 Cuidemos al Zorrito";
+    const desc = "El zorrito está triste. Elige 5 acciones bonitas para devolverle su color y alegría.";
+    document.getElementById('mg-desc').textContent = desc;
+    speakText(desc);
+    const arena = document.getElementById('mg-arena');
+    arena.className = "minigame-arena arena-care";
+    document.getElementById('mg-score').textContent = `Cuidados dados: 0 / ${mgGoal}`;
+    arena.innerHTML = `
+      <div class="care-pet" id="care-pet">🦊</div>
+      <div class="care-btns">
+        <button class="care-btn" onclick="giveCare(this)">🫂 Un abrazo</button>
+        <button class="care-btn" onclick="giveCare(this)">🗣️ Contarle a un adulto</button>
+        <button class="care-btn" onclick="giveCare(this)">🎵 Escuchar música</button>
+        <button class="care-btn" onclick="giveCare(this)">🎨 Dibujar</button>
+        <button class="care-btn" onclick="giveCare(this)">☀️ Jugar afuera</button>
+      </div>
+    `;
+  }
+
+  function giveCare(btn) {
+    btn.disabled = true;
+    playTone(520 + mgScore * 60, 0.15);
+    mgScore++;
+    document.getElementById('mg-score').textContent = `Cuidados dados: ${mgScore} / ${mgGoal}`;
+    const pet = document.getElementById('care-pet');
+    pet.style.filter = `grayscale(${Math.max(0, 90 - mgScore * 18)}%)`;
+    pet.style.transform = `scale(${1 + mgScore * 0.05})`;
+    if (mgScore >= mgGoal) setTimeout(finishGame, 700);
+  }
+
+  function launchStarsGame() {
+    assignedMinigame = "Estrellas del Bienestar (Refuerzo de hábitos saludables)";
+    mgScore = 0; mgGoal = 8;
+    document.getElementById('mg-title').textContent = "🌟 Estrellas del Bienestar";
+    const desc = "¡Tu corazón está fuerte! Atrapa 8 estrellas mágicas para recargar el bosque.";
+    document.getElementById('mg-desc').textContent = desc;
+    speakText(desc);
+    const arena = document.getElementById('mg-arena');
+    arena.className = "minigame-arena arena-stars";
+    arena.innerHTML = "";
+    document.getElementById('mg-score').textContent = `Estrellas: 0 / ${mgGoal}`;
+    spawnClickableItem(arena, "⭐", "🌈", "Estrellas");
+  }
+
+  function spawnClickableItem(arena, icon, burstIcon, labelText) {
+    if (mgScore >= mgGoal) { setTimeout(finishGame, 500); return; }
+    const item = document.createElement('div');
+    item.className = 'target-item';
+    item.textContent = icon;
+    item.style.left = (10 + Math.random() * 75) + '%';
+    item.style.top = (10 + Math.random() * 70) + '%';
+    item.onclick = () => {
+      playTone(500 + mgScore * 50, 0.12);
+      item.textContent = burstIcon;
+      item.onclick = null;
+      mgScore++;
+      document.getElementById('mg-score').textContent = `${labelText}: ${mgScore} / ${mgGoal}`;
+      setTimeout(() => { item.remove(); spawnClickableItem(arena, icon, burstIcon, labelText); }, 260);
+    };
+    arena.appendChild(item);
+  }
+
+  /* ================= CIERRE Y REPORTE DOCENTE ================= */
+  function finishGame() {
+    playTone(784, 0.25);
+    launchConfetti();
+    document.getElementById('screen-minigame').style.display = 'none';
+    document.getElementById('screen-end').style.display = 'block';
+    const msg = `¡Gracias por participar, ${studentName}! Completaste todas las aventuras y ganaste la medalla de Guardián Valiente. Respira conmigo mirando la flor.`;
+    document.getElementById('end-msg').textContent = msg;
+    speakText(msg);
+    buildReport();
+  }
+
+  async function shareGame() {
+    playTone(640, 0.12);
+    const shareData = {
+      title: 'El Guardián del Bosque Mágico 🦉💚',
+      text: 'Juega conmigo en este juego interactivo de salud mental infantil desarrollado por Karen Lizeth Hortúa Cifuentes:',
+      url: window.location.href
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch (e) {}
+    } else {
+      try { await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`); } catch (e) {}
+      const toast = document.getElementById('share-toast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3500);
+    }
+  }
+
+  function buildReport() {
+    const okFaces = faceResults.filter(n => n.chosen === n.k).length;
+    const missFaces = faceResults.filter(n => n.chosen !== n.k).map(n => `${EMO[n.k].name} → dijo ${EMO[n.chosen].name}`);
+
+    let html = `<p><strong>Estudiante:</strong> ${studentName}<br>
+                <strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CO')}<br>
+                <strong>Carita de hoy:</strong> ${EMO[todayFace].name}<br>
+                <strong>Minijuego activado:</strong> ${assignedMinigame}</p><hr>`;
+
+    html += `<p><strong>Fase 1 · Reconocimiento de emociones:</strong> Nombró bien <b>${okFaces} de ${FACE_ORDER.length}</b> caritas.` +
+            (missFaces.length ? `<br><small>Confusiones: ${missFaces.join('; ')}.</small>` : '') + `</p>`;
+
+    html += `<p><strong>Fase 2 · Misiones Proyectivas del Bosque:</strong></p>`;
+    findings.forEach(f => {
+      const cls = (f.level.includes('Alta') || f.level.includes('Crítica')) ? 'alert-high' : 'alert-ok';
+      html += `<p style="margin:6px 0;"><strong>${f.dimension}:</strong> ${f.choice}<br>
+               <span class="${cls}">[${f.level}]</span> ${f.note}</p>`;
+    });
+
+    html += `<hr><p><strong>Lista de observación docente:</strong></p>
+      <div class="chk-list">
+        <label><input type="checkbox"> Reconoció y nombró las emociones básicas</label>
+        <label><input type="checkbox"> Mantuvo la atención durante el recorrido</label>
+        <label><input type="checkbox"> Se expresó con fluidez al hablar de su dibujo</label>
+        <label><input type="checkbox"> Repitió temas de miedo, soledad o enojo intenso</label>
+      </div>`;
+
+    html += `<p style="font-size:0.82rem; color:#555; border-top:1px solid #f4a261; padding-top:8px;">
+      <strong>Nota ética:</strong> Este instrumento es una herramienta de observación pedagógica y <em>no constituye un diagnóstico clínico</em>. Una sola respuesta o dibujo no significan nada por sí solos; lo importante son los patrones repetidos en el tiempo. Ante alertas altas o críticas, dialogar con la familia y remitir a psicoorientación escolar.
+    </p>`;
+    document.getElementById('report-content').innerHTML = html;
+  }
+
+  function toggleTeacher() {
+    const pin = prompt("Ingrese clave docente (Por defecto escribe: 1234):");
+    if (pin === "1234") document.getElementById('teacher-panel').style.display = 'block';
+    else if (pin !== null) alert("Clave incorrecta");
+  }
+
+  function switchTab(tab) {
+    document.getElementById('tab-report').style.display = (tab === 'report') ? 'block' : 'none';
+    document.getElementById('tab-theory').style.display = (tab === 'theory') ? 'block' : 'none';
+    document.getElementById('tab-report-btn').classList.toggle('active', tab === 'report');
+    document.getElementById('tab-theory-btn').classList.toggle('active', tab === 'theory');
+  }
+
+  function downloadReport() {
+    const okFaces = faceResults.filter(n => n.chosen === n.k).length;
+    let text = `REPORTE PEDAGÓGICO INTEGRAL - SALUD MENTAL INFANTIL\n`;
+    text += `Recurso desarrollado por: Karen Lizeth Hortúa Cifuentes\n`;
+    text += `Estudiante: ${studentName}\nFecha: ${new Date().toLocaleString('es-CO')}\n`;
+    text += `Carita elegida hoy: ${EMO[todayFace].name}\n`;
+    text += `Reconocimiento facial: ${okFaces} de ${FACE_ORDER.length} caritas\n`;
+    text += `Minijuego de regulación activado: ${assignedMinigame}\n`;
+    text += `----------------------------------------\n\n`;
+    findings.forEach(f => {
+      text += `* ${f.dimension}: ${f.choice}\n  Nivel: ${f.level}\n  Orientación: ${f.note}\n\n`;
+    });
+    text += `----------------------------------------\n`;
+    text += `NOTA ÉTICA: Este reporte es un insumo de observación pedagógica y no sustituye una valoración psicológica o clínica. En caso de alertas altas o críticas sostenidas en el tiempo, activar ruta de acompañamiento con familia y orientación escolar.\n`;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Reporte_${studentName.replace(/\s+/g, '_')}.txt`;
+    a.click();
+  }
+</script>
+</body>
+</html>
