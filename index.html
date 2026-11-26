@@ -14,76 +14,118 @@
     }
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body {
-      margin: 0; padding: 15px; background: linear-gradient(180deg, #dff5e8 0%, #f9f7f0 100%);
+      margin: 0; padding: 14px; background: linear-gradient(180deg, #dff5e8 0%, #f9f7f0 100%);
       color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center;
     }
     .game-box {
-      max-width: 540px; width: 100%; background: var(--card); border-radius: 24px;
-      padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); text-align: center;
-      margin-top: 10px; position: relative; overflow: hidden;
+      max-width: 560px; width: 100%; background: var(--card); border-radius: 24px;
+      padding: 22px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); text-align: center;
+      margin-top: 8px; position: relative; overflow: hidden;
     }
-    .mascot { font-size: 68px; margin: 5px 0; animation: bounce 2.5s infinite; }
+    .mascot { font-size: 64px; margin: 4px 0; animation: bounce 2.5s infinite; }
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    h1 { font-size: 1.5rem; color: var(--primary); margin: 8px 0; }
-    p.story { font-size: 1.1rem; line-height: 1.5; background: #f4fbf7; padding: 14px; border-radius: 16px; border: 2px dashed #b7e4c7; }
-    .progress-bar {
-      display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; font-size: 1.5rem;
-    }
+    h1 { font-size: 1.45rem; color: var(--primary); margin: 6px 0; }
+    p.story { font-size: 1.05rem; line-height: 1.45; background: #f4fbf7; padding: 12px; border-radius: 16px; border: 2px dashed #b7e4c7; margin: 8px 0; }
+    .progress-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 8px; font-size: 1.4rem; }
     .star-slot { opacity: 0.25; transition: 0.3s; }
     .star-slot.active { opacity: 1; transform: scale(1.2); }
     .voice-btn {
       background: #e9f5ee; border: 2px solid var(--primary); color: var(--primary);
-      padding: 8px 16px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-bottom: 12px;
-      font-size: 0.95rem;
+      padding: 7px 16px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-bottom: 8px; font-size: 0.9rem;
     }
-    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-    .opt-btn {
-      background: #fff; border: 3px solid #e0e7ec; border-radius: 18px; padding: 14px 10px;
-      cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center;
-      font-size: 1rem; font-weight: 600; color: var(--text);
-    }
-    .opt-btn:hover, .opt-btn:active { border-color: var(--primary); background: #f0fdf4; transform: scale(1.02); }
-    .opt-emoji { font-size: 40px; margin-bottom: 6px; }
     input.kid-name {
       width: 85%; padding: 14px; font-size: 1.1rem; border-radius: 14px;
       border: 2px solid #b7e4c7; text-align: center; margin: 12px 0;
     }
     .main-btn {
-      background: var(--primary); color: white; border: none; padding: 14px 28px;
-      font-size: 1.1rem; border-radius: 50px; cursor: pointer; font-weight: bold; width: 85%;
+      background: var(--primary); color: white; border: none; padding: 14px 26px;
+      font-size: 1.08rem; border-radius: 50px; cursor: pointer; font-weight: bold; width: 85%;
       margin-top: 10px; box-shadow: 0 4px 10px rgba(45,138,86,0.3); transition: 0.2s;
     }
     .main-btn:hover { transform: scale(1.02); }
 
-    /* Estilos del Minijuego Interactivo */
+    /* Escenario interactivo de las misiones */
+    .stage {
+      position: relative; width: 100%; min-height: 290px; border-radius: 20px;
+      border: 3px solid #b7e4c7; margin-top: 10px; padding: 14px; overflow: hidden;
+      user-select: none; touch-action: manipulation;
+    }
+
+    /* Misión 1: Cielo con elementos flotantes */
+    .stage-sky { background: linear-gradient(180deg, #caf0f8 0%, #f0f9f4 100%); height: 300px; }
+    .sky-bubble {
+      position: absolute; background: rgba(255,255,255,0.92); border: 3px solid #90e0ef;
+      border-radius: 20px; padding: 10px 12px; cursor: pointer; width: 135px;
+      display: flex; flex-direction: column; align-items: center; font-weight: bold; font-size: 0.88rem;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08); transition: transform 0.2s;
+      animation: floatSky 3.2s infinite ease-in-out;
+    }
+    .sky-bubble:hover { transform: scale(1.08); border-color: var(--primary); }
+    .sky-bubble span.emo { font-size: 36px; }
+    @keyframes floatSky { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }
+
+    /* Misión 2: Bosque oscuro con arbustos para descubrir */
+    .stage-forest { background: linear-gradient(180deg, #1b263b 0%, #2d3a4b 100%); color: #fff; }
+    .bush-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .bush-card {
+      background: #2b4c3f; border: 3px solid #52b788; border-radius: 18px; padding: 16px 8px;
+      cursor: pointer; color: #fff; font-weight: bold; transition: 0.3s; min-height: 112px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .bush-card.revealed { background: #ffffff; color: var(--text); border-color: #ffd166; }
+    .bush-card .emo { font-size: 38px; margin-bottom: 4px; }
+    .bush-hint { font-size: 0.85rem; color: #ffd166; margin: 0 0 6px 0; font-weight: bold; }
+
+    /* Misión 3: Mochila de piedritas */
+    .stage-backpack { background: linear-gradient(180deg, #fefae0 0%, #f4fbf7 100%); }
+    .backpack-center { font-size: 56px; margin: 4px 0; transition: 0.4s; }
+    .stone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+    .stone-btn {
+      background: #e9ecef; border: 3px solid #adb5bd; border-radius: 24px; padding: 12px 8px;
+      cursor: pointer; font-weight: bold; color: var(--text); font-size: 0.9rem;
+      display: flex; flex-direction: column; align-items: center; transition: 0.4s;
+    }
+    .stone-btn:hover { border-color: var(--primary); background: #fff; }
+    .stone-btn.fly-away { transform: translateY(-90px) scale(1.1); opacity: 0; background: #d8f3dc; }
+
+    /* Misión 4: Camino del osito al refugio */
+    .stage-path { background: linear-gradient(180deg, #d8f3dc 0%, #b7e4c7 100%); }
+    .bear-walker { font-size: 52px; transition: 0.6s; margin-bottom: 8px; }
+    .refuge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .refuge-btn {
+      background: #fff; border: 3px solid #74c69d; border-radius: 18px; padding: 12px 8px;
+      cursor: pointer; font-weight: bold; color: var(--text); font-size: 0.9rem;
+      display: flex; flex-direction: column; align-items: center; transition: 0.25s;
+    }
+    .refuge-btn:hover { transform: scale(1.04); border-color: var(--primary); }
+    .refuge-btn.chosen { background: #fff3cd; border-color: #f4a261; transform: scale(1.06); }
+
+    /* Minijuego Final */
     .minigame-arena {
       position: relative; width: 100%; height: 270px; border-radius: 20px;
-      overflow: hidden; margin: 14px 0; border: 3px solid #b7e4c7;
+      overflow: hidden; margin: 12px 0; border: 3px solid #b7e4c7;
       user-select: none; touch-action: manipulation; transition: background 0.6s;
     }
     .arena-dark { background: linear-gradient(180deg, #1b263b 0%, #2d3a4b 100%); }
     .arena-fire { background: linear-gradient(180deg, #fff1e6 0%, #fde2e4 100%); }
     .arena-care { background: linear-gradient(180deg, #eef6ff 0%, #f4fbf7 100%); display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 12px; }
     .arena-stars { background: linear-gradient(180deg, #e0fbfc 0%, #f0f9f4 100%); }
-
     .target-item {
       position: absolute; font-size: 42px; cursor: pointer;
       transition: transform 0.15s; animation: floatItem 2s infinite ease-in-out;
     }
-    .target-item:active { transform: scale(1.4); }
     @keyframes floatItem { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-
     .score-pill {
       display: inline-block; background: #fff3cd; color: #856404; padding: 6px 16px;
-      border-radius: 50px; font-weight: bold; font-size: 1rem; margin-bottom: 6px;
+      border-radius: 50px; font-weight: bold; font-size: 0.98rem; margin-bottom: 6px;
     }
     .care-pet { font-size: 72px; transition: 0.4s; filter: grayscale(90%); }
     .care-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
     .care-btn {
       background: #fff; border: 2px solid var(--primary); border-radius: 14px;
-      padding: 8px 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer;
+      padding: 8px 12px; font-size: 0.92rem; font-weight: bold; cursor: pointer;
     }
-    .care-btn:disabled { opacity: 0.4; border-color: #ccc; cursor: default; }
+    .care-btn:disabled { opacity: 0.4; border-color: #ccc; }
 
     .breath-circle {
       width: 115px; height: 115px; border-radius: 50%; background: #a8dadc;
@@ -92,7 +134,7 @@
     }
     @keyframes breathe { 0%, 100% { transform: scale(0.85); background: #a8dadc; } 50% { transform: scale(1.25); background: #74c69d; } }
 
-    /* Panel Docente con Pestañas */
+    /* Panel Docente */
     .teacher-trigger {
       margin-top: 22px; font-size: 0.85rem; color: #6c757d; background: none; border: none;
       text-decoration: underline; cursor: pointer;
@@ -123,31 +165,31 @@
   <div id="screen-start">
     <div class="mascot">🦉</div>
     <h1>El Guardián del Bosque Mágico</h1>
-    <p class="story">¡Hola explorador! Soy el Búho Lumi. Necesito tu ayuda para cuidar las emociones de los animalitos del bosque y desbloquear un minijuego mágico.</p>
+    <p class="story">¡Hola explorador! Soy el Búho Lumi. Ayuda a los animalitos en 4 retos mágicos y desbloquea un juego secreto para cuidar sus emociones.</p>
     <input type="text" id="kidName" class="kid-name" placeholder="Escribe tu nombre o apodo">
     <br>
     <button class="main-btn" onclick="startGame()">¡Comenzar Aventura! 🌟</button>
   </div>
 
-  <!-- 2. Pantalla de Misiones -->
+  <!-- 2. Pantalla de Misiones Interactivas -->
   <div id="screen-question" style="display:none;">
-    <div class="progress-bar" id="progress-bar">
+    <div class="progress-bar">
       <span class="star-slot">⭐</span>
       <span class="star-slot">⭐</span>
       <span class="star-slot">⭐</span>
       <span class="star-slot">⭐</span>
     </div>
-    <div class="mascot" id="q-mascot">🦊</div>
+    <div class="mascot" id="q-mascot" style="font-size:52px;">🦊</div>
     <h1 id="q-title">Misión 1</h1>
     <button class="voice-btn" onclick="speakCurrent()">🔊 Escuchar cuento</button>
     <p class="story" id="q-story"></p>
-    <div class="options-grid" id="q-options"></div>
+    <div id="mission-stage"></div>
   </div>
 
   <!-- 3. Pantalla de Minijuego Adaptativo -->
   <div id="screen-minigame" style="display:none;">
     <h1 id="mg-title">🎮 Reto Mágico</h1>
-    <p class="story" id="mg-desc" style="margin:8px 0; font-size:1rem;"></p>
+    <p class="story" id="mg-desc" style="font-size:1rem;"></p>
     <div class="score-pill" id="mg-score">Progreso: 0 / 8</div>
     <div class="minigame-arena" id="mg-arena"></div>
   </div>
@@ -156,7 +198,7 @@
   <div id="screen-end" style="display:none;">
     <div class="mascot">🏅</div>
     <h1>¡Medalla de Guardián Valiente!</h1>
-    <p class="story" id="end-msg">¡Gracias por ayudar a los animalitos! Ahora hagamos el Escudo de la Flor Mágica: inhala cuando el círculo crezca y sopla suave cuando se haga pequeño.</p>
+    <p class="story" id="end-msg"></p>
     <div class="breath-circle">🌸</div>
     <button class="main-btn" onclick="location.reload()">Jugar con otro explorador 🔄</button>
     <br>
@@ -168,13 +210,11 @@
         <button class="tab-btn" id="tab-theory-btn" onclick="switchTab('theory')">🎓 Marco Pedagógico</button>
       </div>
 
-      <!-- Pestaña 1: Reporte Proyectivo -->
       <div id="tab-report">
         <div id="report-content"></div>
         <button class="main-btn" style="margin-top:12px; width:100%; font-size:0.95rem;" onclick="downloadReport()">📥 Descargar Reporte (.txt)</button>
       </div>
 
-      <!-- Pestaña 2: Marco Pedagógico para Sustentación -->
       <div id="tab-theory" style="display:none;">
         <div class="theory-card">
           <h4>1. ¿Qué es la Salud Mental Infantil?</h4>
@@ -182,16 +222,16 @@
         </div>
         <div class="theory-card">
           <h4>2. Principales Causas de Afectación</h4>
-          Exposición a conflictos o violencia familiar, uso excesivo de pantallas, falta de juego libre, acoso escolar, invalidación emocional y sobrecarga de estrés en el entorno.
+          Conflictos o violencia familiar, uso excesivo de pantallas, falta de juego libre, acoso escolar, invalidación emocional y sobrecarga de estrés en el entorno.
         </div>
         <div class="theory-card">
           <h4>3. Consecuencias en el Desarrollo Infantil</h4>
-          Aislamiento, irritabilidad, dificultades de atención y aprendizaje, baja autoestima, miedos persistentes y somatización (dolores de barriga o cabeza sin causa médica).
+          Aislamiento, irritabilidad, dificultades de atención y aprendizaje, baja autoestima, miedos persistentes y somatización (dolores físicos sin causa médica).
         </div>
         <div class="theory-card">
           <h4>4. Estrategias Pedagógicas del Juego</h4>
-          <strong>Enfoque proyectivo:</strong> A través de animalitos, el niño expresa lo que siente sin sentirse juzgado.<br>
-          <strong>Minijuego adaptativo:</strong> Responde a la emoción detectada (descarga motora, seguridad o autocuidado).<br>
+          <strong>4 mecánicas lúdico-proyectivas:</strong> Atrapar climas, linterna en el bosque, aligerar la mochila y camino al refugio.<br>
+          <strong>Minijuego adaptativo:</strong> Responde a la emoción detectada.<br>
           <strong>Regulación somática:</strong> Respiración visual con la Flor Mágica.
         </div>
         <div class="theory-card">
@@ -211,7 +251,6 @@
   let mgScore = 0;
   let mgGoal = 8;
 
-  // Sonidos suaves con Web Audio API (sin archivos externos)
   function playTone(freq = 520, duration = 0.12) {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -230,9 +269,10 @@
 
   const missions = [
     {
+      type: "sky",
       mascot: "🦊",
-      title: "1. El Clima del Corazón",
-      story: "El zorrito Tito acaba de despertar. Si el corazón de Tito fuera el clima de hoy, ¿cómo se siente por dentro?",
+      title: "1. Atrapa el Clima del Corazón",
+      story: "El zorrito Tito acaba de despertar. ¡Atrapa en el cielo la nube o el sol que se parece al corazón de Tito hoy!",
       dimension: "Estado Emocional Base",
       options: [
         { emoji: "☀️", label: "Soleado y feliz", tag: "estable", level: "Estable", note: "Percibe seguridad y bienestar emocional en su jornada." },
@@ -242,299 +282,38 @@
       ]
     },
     {
+      type: "forest",
       mascot: "🐰",
-      title: "2. Los Ruidos del Bosque",
-      story: "La conejita Lila se esconde detrás de un árbol porque algo la asustó mucho. ¿De qué se está escondiendo Lila?",
+      title: "2. La Linterna en el Bosque",
+      story: "La conejita Lila escucha ruidos detrás de los arbustos. Toca los arbustos para descubrir qué hay, y toca de nuevo el que asusta a Lila.",
       dimension: "Focos de Miedo o Vulnerabilidad",
       options: [
-        { emoji: "🗣️", label: "Gritos o peleas fuertes", tag: "miedo", level: "Alerta Alta", note: "Sensibilidad o exposición a gritos/conflictos en su entorno." },
-        { emoji: "🌑", label: "Quedarse sola a oscuras", tag: "miedo", level: "Alerta Media", note: "Temor al abandono, soledad o separación." },
-        { emoji: "🙈", label: "Que otros se burlen", tag: "tristeza", level: "Alerta Media", note: "Inseguridad social o temor al rechazo entre pares." },
-        { emoji: "🦋", label: "Nada, solo juega", tag: "estable", level: "Estable", note: "No proyecta temores agudos en este escenario." }
+        { emoji: "🗣️", label: "Gritos o peleas", tag: "miedo", level: "Alerta Alta", note: "Sensibilidad o exposición a gritos/conflictos en su entorno." },
+        { emoji: "🌑", label: "Quedarse sola", tag: "miedo", level: "Alerta Media", note: "Temor al abandono, soledad o separación." },
+        { emoji: "🙈", label: "Que se burlen", tag: "tristeza", level: "Alerta Media", note: "Inseguridad social o temor al rechazo entre pares." },
+        { emoji: "🦋", label: "Solo mariposas", tag: "estable", level: "Estable", note: "No proyecta temores agudos en este escenario." }
       ]
     },
     {
+      type: "backpack",
       mascot: "🐢",
-      title: "3. La Mochila de Piedritas",
-      story: "La tortuga Tita lleva una mochila que hoy le pesa en la espalda. ¿Qué piedrita pesada lleva adentro?",
+      title: "3. Aligera la Mochila de Tita",
+      story: "La tortuga Tita lleva una mochila pesada. Toca la piedrita que más le pesa para convertirla en un globo y hacerla volar.",
       dimension: "Carga Emocional / Problemas",
       options: [
-        { emoji: "🏠", label: "Problemas en su casita", tag: "tristeza", level: "Alerta Alta", note: "Preocupación asociada a dinámicas familiares o del hogar." },
-        { emoji: "🏫", label: "Tristeza en la escuela", tag: "tristeza", level: "Alerta Media", note: "Dificultad en convivencia escolar o presión académica." },
-        { emoji: "🤐", label: "Un secreto que duele", tag: "miedo", level: "Alerta Crítica", note: "ATENCIÓN: Proyecta carga silenciosa o vivencia que teme contar. Brindar espacio seguro con orientación escolar." },
-        { emoji: "🎈", label: "Su mochila es liviana", tag: "estable", level: "Estable", note: "No reporta cargas emocionales pesadas en este momento." }
+        { emoji: "🏠", label: "Problemas en casa", tag: "tristeza", level: "Alerta Alta", note: "Preocupación asociada a dinámicas familiares o del hogar." },
+        { emoji: "🏫", label: "Tristeza en el cole", tag: "tristeza", level: "Alerta Media", note: "Dificultad en convivencia escolar o presión académica." },
+        { emoji: "🤐", label: "Secreto que duele", tag: "miedo", level: "Alerta Crítica", note: "ATENCIÓN: Proyecta carga silenciosa o vivencia que teme contar. Brindar espacio seguro con orientación escolar." },
+        { emoji: "🎈", label: "Está liviana", tag: "estable", level: "Estable", note: "No reporta cargas emocionales pesadas en este momento." }
       ]
     },
     {
+      type: "path",
       mascot: "🐻",
-      title: "4. El Árbol del Refugio",
-      story: "Cuando al osito Bambi le duele el corazón o tiene miedo, ¿a quién busca para sentirse seguro y abrazado?",
+      title: "4. El Camino al Refugio",
+      story: "Cuando al osito Bambi le duele el corazón, ¿hacia dónde camina para sentirse seguro? Toca el refugio para guiar a Bambi.",
       dimension: "Red de Apoyo Percibida",
       options: [
-        { emoji: "👩‍👧", label: "A su familia en casa", tag: "estable", level: "Estable", note: "Reconoce a su familia como refugio seguro." },
-        { emoji: "👩‍🏫", label: "A su profe en el cole", tag: "estable", level: "Estable", note: "Vínculo de confianza positivo con la figura docente." },
-        { emoji: "🧸", label: "A sus amigos o juguetes", tag: "tristeza", level: "Alerta Media", note: "Se apoya en pares o juego; fortalecer confianza con adultos." },
-        { emoji: "🕳️", label: "Se esconde solito", tag: "tristeza", level: "Alerta Alta", note: "Sentimiento de aislamiento; percibe que debe afrontar sus miedos sin ayuda adulta." }
-      ]
-    }
-  ];
-
-  function speakText(text) {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'es-CO';
-      utter.rate = 0.95;
-      window.speechSynthesis.speak(utter);
-    }
-  }
-
-  function startGame() {
-    playTone(587, 0.15);
-    const input = document.getElementById('kidName').value.trim();
-    studentName = input ? input : "Explorador Anónimo";
-    document.getElementById('screen-start').style.display = 'none';
-    document.getElementById('screen-question').style.display = 'block';
-    loadMission();
-  }
-
-  function updateProgress() {
-    const slots = document.querySelectorAll('.star-slot');
-    slots.forEach((s, idx) => {
-      if (idx < currentStep) s.classList.add('active');
-    });
-  }
-
-  function loadMission() {
-    updateProgress();
-    const m = missions[currentStep];
-    document.getElementById('q-mascot').textContent = m.mascot;
-    document.getElementById('q-title').textContent = m.title;
-    document.getElementById('q-story').textContent = m.story;
-
-    const grid = document.getElementById('q-options');
-    grid.innerHTML = '';
-    m.options.forEach(opt => {
-      const btn = document.createElement('button');
-      btn.className = 'opt-btn';
-      btn.innerHTML = `<span class="opt-emoji">${opt.emoji}</span><span>${opt.label}</span>`;
-      btn.onclick = () => selectOption(m, opt);
-      grid.appendChild(btn);
-    });
-    speakText(m.story);
-  }
-
-  function speakCurrent() {
-    speakText(missions[currentStep].story);
-  }
-
-  function selectOption(mission, opt) {
-    playTone(660, 0.12);
-    findings.push({
-      dimension: mission.dimension,
-      choice: `${opt.emoji} ${opt.label}`,
-      tag: opt.tag,
-      level: opt.level,
-      note: opt.note
-    });
-    currentStep++;
-    if (currentStep < missions.length) {
-      loadMission();
-    } else {
-      startAdaptiveMinigame();
-    }
-  }
-
-  /* --- MINIJUEGO ADAPTATIVO SEGÚN LO IDENTIFICADO --- */
-  function startAdaptiveMinigame() {
-    document.getElementById('screen-question').style.display = 'none';
-    document.getElementById('screen-minigame').style.display = 'block';
-
-    const tags = findings.map(f => f.tag);
-    if (tags.includes("enojo")) {
-      launchSparksGame();
-    } else if (tags.includes("miedo")) {
-      launchFirefliesGame();
-    } else if (tags.includes("tristeza")) {
-      launchCareGame();
-    } else {
-      launchStarsGame();
-    }
-  }
-
-  // Minijuego 1: Miedo -> Atrapa las Luciérnagas
-  function launchFirefliesGame() {
-    assignedMinigame = "Atrapa las Luciérnagas (Regulación de miedo y seguridad)";
-    mgScore = 0; mgGoal = 8;
-    document.getElementById('mg-title').textContent = "✨ Atrapa las Luciérnagas";
-    const desc = "¡El bosque está oscuro! Toca 8 luciérnagas mágicas para llenarlo de luz y seguridad.";
-    document.getElementById('mg-desc').textContent = desc;
-    speakText(desc);
-
-    const arena = document.getElementById('mg-arena');
-    arena.className = "minigame-arena arena-dark";
-    arena.innerHTML = "";
-    document.getElementById('mg-score').textContent = `Luciérnagas: 0 / ${mgGoal}`;
-    spawnClickableItem(arena, "✨", "🌟", () => {
-      const lightness = 20 + (mgScore * 8);
-      arena.style.background = `hsl(210, 45%, ${lightness}%)`;
-    });
-  }
-
-  // Minijuego 2: Enojo -> Apaga las Chispas
-  function launchSparksGame() {
-    assignedMinigame = "Apaga las Chispas (Descarga motora y calma)";
-    mgScore = 0; mgGoal = 8;
-    document.getElementById('mg-title').textContent = "💧 Apaga las Chispas";
-    const desc = "¡Hay chispas de enojo en el bosque! Tócalas para convertirlas en flores de calma.";
-    document.getElementById('mg-desc').textContent = desc;
-    speakText(desc);
-
-    const arena = document.getElementById('mg-arena');
-    arena.className = "minigame-arena arena-fire";
-    arena.innerHTML = "";
-    document.getElementById('mg-score').textContent = `Chispas calmadas: 0 / ${mgGoal}`;
-    spawnClickableItem(arena, "🔥", "🌸");
-  }
-
-  // Minijuego 3: Tristeza -> Cuidemos al Animalito
-  function launchCareGame() {
-    assignedMinigame = "Cuidemos al Animalito (Autocuidado y red de apoyo)";
-    mgScore = 0; mgGoal = 5;
-    document.getElementById('mg-title').textContent = "💛 Cuidemos al Zorrito";
-    const desc = "El zorrito está triste. Elige 5 cosas bonitas que lo ayuden a sentirse acompañado.";
-    document.getElementById('mg-desc').textContent = desc;
-    speakText(desc);
-
-    const arena = document.getElementById('mg-arena');
-    arena.className = "minigame-arena arena-care";
-    document.getElementById('mg-score').textContent = `Cuidados dados: 0 / ${mgGoal}`;
-    arena.innerHTML = `
-      <div class="care-pet" id="care-pet">🦊</div>
-      <div class="care-btns">
-        <button class="care-btn" onclick="giveCare(this)">🫂 Un abrazo</button>
-        <button class="care-btn" onclick="giveCare(this)">🗣️ Contarle a un adulto</button>
-        <button class="care-btn" onclick="giveCare(this)">🎵 Escuchar música</button>
-        <button class="care-btn" onclick="giveCare(this)">🎨 Dibujar</button>
-        <button class="care-btn" onclick="giveCare(this)">☀️ Jugar afuera</button>
-      </div>
-    `;
-  }
-
-  function giveCare(btn) {
-    btn.disabled = true;
-    playTone(520 + mgScore * 60, 0.15);
-    mgScore++;
-    document.getElementById('mg-score').textContent = `Cuidados dados: ${mgScore} / ${mgGoal}`;
-    const pet = document.getElementById('care-pet');
-    const gray = Math.max(0, 90 - mgScore * 18);
-    pet.style.filter = `grayscale(${gray}%)`;
-    pet.style.transform = `scale(${1 + mgScore * 0.05})`;
-    if (mgScore >= mgGoal) {
-      setTimeout(finishGame, 700);
-    }
-  }
-
-  // Minijuego 4: Estable -> Estrellas del Bienestar
-  function launchStarsGame() {
-    assignedMinigame = "Estrellas del Bienestar (Refuerzo de hábitos saludables)";
-    mgScore = 0; mgGoal = 8;
-    document.getElementById('mg-title').textContent = "🌟 Estrellas del Bienestar";
-    const desc = "¡Tu corazón está fuerte! Atrapa 8 estrellas mágicas para recargar el bosque.";
-    document.getElementById('mg-desc').textContent = desc;
-    speakText(desc);
-
-    const arena = document.getElementById('mg-arena');
-    arena.className = "minigame-arena arena-stars";
-    arena.innerHTML = "";
-    document.getElementById('mg-score').textContent = `Estrellas: 0 / ${mgGoal}`;
-    spawnClickableItem(arena, "⭐", "🌈");
-  }
-
-  function spawnClickableItem(arena, icon, burstIcon, onHit) {
-    if (mgScore >= mgGoal) {
-      setTimeout(finishGame, 500);
-      return;
-    }
-    const item = document.createElement('div');
-    item.className = 'target-item';
-    item.textContent = icon;
-    item.style.left = (10 + Math.random() * 75) + '%';
-    item.style.top = (10 + Math.random() * 70) + '%';
-
-    item.onclick = () => {
-      playTone(500 + mgScore * 50, 0.12);
-      item.textContent = burstIcon;
-      item.onclick = null;
-      mgScore++;
-      document.getElementById('mg-score').textContent = `Progreso: ${mgScore} / ${mgGoal}`;
-      if (onHit) onHit();
-      setTimeout(() => {
-        item.remove();
-        spawnClickableItem(arena, icon, burstIcon, onHit);
-      }, 260);
-    };
-    arena.appendChild(item);
-  }
-
-  function finishGame() {
-    playTone(784, 0.25);
-    document.getElementById('screen-minigame').style.display = 'none';
-    document.getElementById('screen-end').style.display = 'block';
-    const msg = `¡Lo lograste ${studentName}! Completaste el reto y ganaste la medalla de Guardián Valiente. Ahora respira conmigo mirando la flor.`;
-    document.getElementById('end-msg').textContent = msg;
-    speakText(msg);
-    buildReport();
-  }
-
-  function buildReport() {
-    const container = document.getElementById('report-content');
-    let html = `<p><strong>Estudiante:</strong> ${studentName}<br>
-                <strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CO')}<br>
-                <strong>Minijuego activado:</strong> ${assignedMinigame}</p><hr>`;
-    findings.forEach(f => {
-      const cls = (f.level.includes('Alta') || f.level.includes('Crítica')) ? 'alert-high' : 'alert-ok';
-      html += `<p><strong>${f.dimension}:</strong> ${f.choice}<br>
-               <span class="${cls}">[${f.level}]</span> ${f.note}</p>`;
-    });
-    html += `<p style="font-size:0.82rem; color:#555; border-top:1px solid #f4a261; padding-top:8px;">
-      <strong>Nota ética:</strong> Este instrumento es una herramienta de observación pedagógica proyectiva y <em>no constituye un diagnóstico clínico</em>. Ante alertas altas o críticas, se sugiere diálogo respetuoso con la familia y remisión a psicoorientación escolar.
-    </p>`;
-    container.innerHTML = html;
-  }
-
-  function toggleTeacher() {
-    const pin = prompt("Ingrese clave docente (Por defecto escribe: 1234):");
-    if (pin === "1234") {
-      document.getElementById('teacher-panel').style.display = 'block';
-    } else if (pin !== null) {
-      alert("Clave incorrecta");
-    }
-  }
-
-  function switchTab(tab) {
-    document.getElementById('tab-report').style.display = (tab === 'report') ? 'block' : 'none';
-    document.getElementById('tab-theory').style.display = (tab === 'theory') ? 'block' : 'none';
-    document.getElementById('tab-report-btn').classList.toggle('active', tab === 'report');
-    document.getElementById('tab-theory-btn').classList.toggle('active', tab === 'theory');
-  }
-
-  function downloadReport() {
-    let text = `REPORTE PEDAGÓGICO PROYECTIVO - SALUD MENTAL INFANTIL\n`;
-    text += `Estudiante: ${studentName}\nFecha: ${new Date().toLocaleString('es-CO')}\n`;
-    text += `Minijuego de regulación activado: ${assignedMinigame}\n`;
-    text += `----------------------------------------\n\n`;
-    findings.forEach(f => {
-      text += `* ${f.dimension}: ${f.choice}\n  Nivel: ${f.level}\n  Orientación: ${f.note}\n\n`;
-    });
-    text += `----------------------------------------\n`;
-    text += `NOTA ÉTICA: Este reporte es un insumo de observación pedagógica y no sustituye una valoración psicológica o clínica. En caso de alertas altas o críticas, activar ruta de acompañamiento con familia y orientación escolar.\n`;
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `Reporte_${studentName.replace(/\s+/g, '_')}.txt`;
-    a.click();
-  }
-</script>
-</body>
-</html>
+        { emoji: "👩‍👧", label: "A su familia", tag: "estable", level: "Estable", note: "Reconoce a su familia como refugio seguro." },
+        { emoji: "👩‍🏫", label: "A su profe", tag: "estable", level: "Estable", note: "Vínculo de confianza positivo con la figura docente." },
+        { emoji: "🧸", label: "
